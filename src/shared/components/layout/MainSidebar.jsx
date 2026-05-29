@@ -60,7 +60,7 @@ export default function MainSidebar({ onQuickLog }) {
             IPA KPI Hub
           </div>
           <div style={{ fontSize: 10.5, color: 'var(--ink-3)', lineHeight: 1.2 }}>
-            {user?.org || 'Organization'}
+            {t('org')}
           </div>
         </div>
       </div>
