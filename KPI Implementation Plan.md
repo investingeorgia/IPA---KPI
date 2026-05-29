@@ -3,6 +3,15 @@ Enterprise Georgia / IPA
 
 ---
 
+## Session Rules — Read This First
+
+1. **At the start of every session:** read `PROGRESS.md` before touching any code. It tells you the current chunk, environment details, and what was last verified.
+2. **At the end of every chunk:** update `PROGRESS.md` — mark the chunk done, update "Next up", add any key decisions or gotchas discovered, update the remaining chunks table, and commit the file together with the chunk's code.
+3. **Never skip the verification checklist** at the end of each chunk below. Do not mark a chunk complete until every item is checked.
+4. **Commit after every chunk** — one commit per chunk with a clear message referencing the chunk number.
+
+---
+
 ## Project Context
 
 - **Existing repo**: https://github.com/investingeorgia/IPA---KPI
