@@ -81,18 +81,13 @@ export function LogProgressModal({ isOpen, onClose, kpiId }) {
     <Modal isOpen={isOpen} onClose={onClose} title={t('logProgress')} footer={step === 1 ? step1Footer : step2Footer}>
       {step === 1 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div>
-            <div style={{ marginBottom: 8, fontWeight: 500 }}>{t('activityType')}</div>
-            <div style={{ display: 'flex', gap: 8 }}>
+          <div className="field">
+            <label className="field-label">{t('activityType')}</label>
+            <div className="seg">
               {ACTIVITY_TYPES.map((type) => (
                 <button
                   key={type}
-                  className={activityType === type ? undefined : 'btn btn-ghost'}
-                  style={
-                    activityType === type
-                      ? { background: 'var(--green)', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', cursor: 'pointer', fontWeight: 500 }
-                      : { cursor: 'pointer' }
-                  }
+                  className={activityType === type ? 'active' : ''}
                   onClick={() => setActivityType(type)}
                 >
                   {t(type)}
@@ -100,8 +95,8 @@ export function LogProgressModal({ isOpen, onClose, kpiId }) {
               ))}
             </div>
           </div>
-          <div>
-            <div style={{ marginBottom: 8, fontWeight: 500 }}>{t('count')}</div>
+          <div className="field">
+            <label className="field-label">{t('count')}</label>
             <input
               type="number"
               min={1}
@@ -117,8 +112,8 @@ export function LogProgressModal({ isOpen, onClose, kpiId }) {
       {step === 2 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {(activityType === 'meeting' || activityType === 'call') && (
-            <div>
-              <div style={{ marginBottom: 8, fontWeight: 500 }}>{t('company')}</div>
+            <div className="field">
+              <label className="field-label">{t('company')}</label>
               <div style={{ position: 'relative' }}>
                 <input
                   className="input"
@@ -156,8 +151,8 @@ export function LogProgressModal({ isOpen, onClose, kpiId }) {
           )}
 
           {activityType === 'article' && (
-            <div>
-              <div style={{ marginBottom: 8, fontWeight: 500 }}>Article URL</div>
+            <div className="field">
+              <label className="field-label">Article URL</label>
               <input
                 type="text"
                 className="input"
@@ -169,8 +164,8 @@ export function LogProgressModal({ isOpen, onClose, kpiId }) {
           )}
 
           {activityType === 'other' && (
-            <div>
-              <div style={{ marginBottom: 8, fontWeight: 500 }}>Note</div>
+            <div className="field">
+              <label className="field-label">Note</label>
               <input
                 type="text"
                 className="input"

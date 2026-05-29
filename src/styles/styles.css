@@ -1,5 +1,5 @@
 /* Shared styles for both KPI app variations */
-@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Noto+Sans+Georgian:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+Georgian:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
   --green-900: #0B3D2E;
@@ -25,16 +25,16 @@
   --r-md: 12px;
   --r-lg: 18px;
   --r-xl: 28px;
-  font-family: 'Inter Tight', 'Noto Sans Georgian', system-ui, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Noto Sans Georgian', system-ui, sans-serif;
 }
 
 .kpi-root {
-  font-family: 'Inter Tight', 'Noto Sans Georgian', system-ui, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Noto Sans Georgian', system-ui, sans-serif;
   color: var(--ink);
   font-feature-settings: 'ss01', 'cv11';
   letter-spacing: -0.005em;
 }
-.kpi-root.lang-ka { font-family: 'Noto Sans Georgian', 'Inter Tight', system-ui, sans-serif; }
+.kpi-root.lang-ka { font-family: 'Noto Sans Georgian', 'Plus Jakarta Sans', system-ui, sans-serif; }
 
 .kpi-root *, .kpi-root *::before, .kpi-root *::after { box-sizing: border-box; }
 

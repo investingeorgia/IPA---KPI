@@ -73,16 +73,16 @@ export function TeamPage() {
         }
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div>
-            <div style={{ fontWeight: 500, marginBottom: 6, fontSize: 13 }}>Full name</div>
+          <div className="field">
+            <label className="field-label">Full name</label>
             <input className="input" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nino Beridze" autoFocus />
           </div>
-          <div>
-            <div style={{ fontWeight: 500, marginBottom: 6, fontSize: 13 }}>Email</div>
+          <div className="field">
+            <label className="field-label">Email</label>
             <input className="input" type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="nino@enterprise.gov.ge" />
           </div>
-          <div>
-            <div style={{ fontWeight: 500, marginBottom: 6, fontSize: 13 }}>Role</div>
+          <div className="field">
+            <label className="field-label">Role</label>
             <select className="input" value={newRole} onChange={e => setNewRole(e.target.value)}>
               <option value="user">User</option>
               <option value="admin">Admin</option>

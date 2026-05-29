@@ -113,34 +113,34 @@ export function KpiListPage() {
         }
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div>
-            <div style={{ fontWeight: 500, marginBottom: 6, fontSize: 13 }}>{t('title')}</div>
+          <div className="field">
+            <label className="field-label">{t('title')}</label>
             <input className="input" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="KPI title..." autoFocus />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div>
-              <div style={{ fontWeight: 500, marginBottom: 6, fontSize: 13 }}>{t('program')}</div>
+            <div className="field">
+              <label className="field-label">{t('program')}</label>
               <select className="input" value={newProgram} onChange={e => setNewProgram(e.target.value)}>
                 {KPI_PROGRAMS.map(p => <option key={p} value={p}>{t(p)}</option>)}
               </select>
             </div>
-            <div>
-              <div style={{ fontWeight: 500, marginBottom: 6, fontSize: 13 }}>Unit</div>
+            <div className="field">
+              <label className="field-label">Unit</label>
               <input className="input" value={newUnit} onChange={e => setNewUnit(e.target.value)} placeholder="#" />
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div>
-              <div style={{ fontWeight: 500, marginBottom: 6, fontSize: 13 }}>{t('target')}</div>
+            <div className="field">
+              <label className="field-label">{t('target')}</label>
               <input className="input" type="number" min="1" value={newTarget} onChange={e => setNewTarget(e.target.value)} placeholder="100" />
             </div>
-            <div>
-              <div style={{ fontWeight: 500, marginBottom: 6, fontSize: 13 }}>{t('deadline')}</div>
+            <div className="field">
+              <label className="field-label">{t('deadline')}</label>
               <input className="input" type="date" value={newDeadline} onChange={e => setNewDeadline(e.target.value)} />
             </div>
           </div>
-          <div>
-            <div style={{ fontWeight: 500, marginBottom: 6, fontSize: 13 }}>{t('assignees')}</div>
+          <div className="field">
+            <label className="field-label">{t('assignees')}</label>
             <select multiple className="input" value={newAssignees} onChange={e => setNewAssignees(Array.from(e.target.selectedOptions, o => o.value))} style={{ height: 90 }}>
               {(members || []).map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
             </select>
