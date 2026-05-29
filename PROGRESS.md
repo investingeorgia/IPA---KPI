@@ -6,8 +6,8 @@
 
 ## Current Status
 
-**Last completed:** Chunk 3 — Mock Data & Hooks Layer  
-**Next up:** Chunk 4 — Dashboard + KPI List pages  
+**Last completed:** Chunk 4 — Dashboard + KPI List pages  
+**Next up:** Chunk 5 — KPI Detail + Progress Logging  
 **Dev server:** Running via `D:\Claude\start-dev.cmd` → `http://localhost:5173`  
 **Node.js:** Installed at `C:\nodejs` (portable zip, v20.18.1) — NOT on system PATH, use full path `C:\nodejs\node.exe` / `C:\nodejs\npm.cmd`
 
@@ -87,8 +87,8 @@ Start dev: D:\Claude\start-dev.cmd  → localhost:5173
 | Chunk | Description | Status |
 |---|---|---|
 | 3 | Mock Data & Hooks Layer | ✅ Done |
-| 4 | Dashboard + KPI List pages | ⏳ Next |
-| 5 | KPI Detail + Progress Logging | ⬜ |
+| 4 | Dashboard + KPI List pages | ✅ Done |
+| 5 | KPI Detail + Progress Logging | ⏳ Next |
 | 6 | Todos (List / Board / Timeline) | ⬜ |
 | 7 | Team + Database modules | ⬜ |
 | 8 | Full detail pages + Profile + Reports | ⬜ |
@@ -123,15 +123,31 @@ Start dev: D:\Claude\start-dev.cmd  → localhost:5173
 
 1. Read this file
 2. Read `KPI Implementation Plan.md` for the next chunk's full spec
-3. Start the dev server: run `D:\Claude\start-dev.cmd` (or use the preview tool with `D:\Claude\.claude\launch.json`)
-4. Pick up from **Chunk 3** below
+3. Start the dev server: `cd D:\Claude\IPA-KPI-repo && /c/nodejs/node.exe node_modules/vite/bin/vite.js` → `http://localhost:5173`
+4. Pick up from **Chunk 5** (KPI Detail + Progress Logging)
 
-### Chunk 3 — What to build next
+---
 
-Files to create:
-- `src/data/mockData.js` — extract all seed data from `hub-data.jsx` (USERS, KPIS, COMPANIES, ARTICLES, PROGRESS_LOGS, TODOS, ATYPES constants)
-- `src/shared/hooks/useAuth.js`
-- `src/shared/hooks/useCurrentUser.js`
+### ✅ Chunk 4 — Dashboard + KPI List pages
+
+**Files created:**
+- `src/modules/dashboard/DashboardPage.jsx` — assembles KpiSummaryCards + TeamProgressOverview + RecentActivityFeed
+- `src/modules/dashboard/components/KpiSummaryCards.jsx` — 3 stat cards (Total / On Track / At Risk)
+- `src/modules/dashboard/components/TeamProgressOverview.jsx` — admin-only team health table (member × KPI count × last activity × status)
+- `src/modules/dashboard/components/RecentActivityFeed.jsx` — last 10 logs with Quick Log placeholder button
+- `src/modules/kpis/KpiListPage.jsx` — program + status + search filters, role-gated "New KPI" button
+- `src/modules/kpis/components/KpiCard.jsx` — program badge, status badge, progress bar, deadline, avatar stack
+
+**Verified:** `vite build` passes clean — 75 modules, zero errors.
+
+**Key decisions:**
+- `KpiListPage` calls `useKPIs()` and `useKPIs({ assigneeId })` unconditionally (hooks can't be conditional), picks by role
+- `KpiCard` uses local `isOverdue()` helper rather than importing from statusCalculators to keep it self-contained
+- `TeamProgressOverview` uses majority-vote over member's KPI statuses for the per-member status badge
+
+---
+
+### Chunk 3 — What to build next (old note, kept for reference)
 - `src/shared/hooks/useKPIs.js`
 - `src/shared/hooks/useTodos.js`
 - `src/shared/hooks/useTeam.js`
