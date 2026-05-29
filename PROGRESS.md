@@ -6,8 +6,8 @@
 
 ## Current Status
 
-**Last completed:** Chunk 2 — Shared UI Component Library  
-**Next up:** Chunk 3 — Mock Data & Hooks Layer  
+**Last completed:** Chunk 3 — Mock Data & Hooks Layer  
+**Next up:** Chunk 4 — Dashboard + KPI List pages  
 **Dev server:** Running via `D:\Claude\start-dev.cmd` → `http://localhost:5173`  
 **Node.js:** Installed at `C:\nodejs` (portable zip, v20.18.1) — NOT on system PATH, use full path `C:\nodejs\node.exe` / `C:\nodejs\npm.cmd`
 
@@ -86,8 +86,8 @@ Start dev: D:\Claude\start-dev.cmd  → localhost:5173
 
 | Chunk | Description | Status |
 |---|---|---|
-| 3 | Mock Data & Hooks Layer | ⏳ Next |
-| 4 | Dashboard + KPI List pages | ⬜ |
+| 3 | Mock Data & Hooks Layer | ✅ Done |
+| 4 | Dashboard + KPI List pages | ⏳ Next |
 | 5 | KPI Detail + Progress Logging | ⬜ |
 | 6 | Todos (List / Board / Timeline) | ⬜ |
 | 7 | Team + Database modules | ⬜ |
@@ -95,6 +95,27 @@ Start dev: D:\Claude\start-dev.cmd  → localhost:5173
 | 9 | Firebase Authentication | ⬜ |
 | 10 | Firestore Data Layer | ⬜ |
 | 11 | Deploy to Vercel | ⬜ |
+
+---
+
+### ✅ Chunk 3 — Mock Data & Hooks Layer
+**Commit:** (see git log)
+
+- `src/data/mockData.js` — all seed data extracted from `hub-data.jsx`: 11 users, 12 KPIs (bilingual titles), 5 companies, 3 articles, 7 progress logs, 8 todos. Uses `new Date()` for relative dates.
+- `src/shared/contexts/DataContext.jsx` — single shared state store replacing prototype's `StoreProvider`. Holds all state slices, exposes all actions. `addProgressLog` auto-creates company/article records. `deleteLog` reverses KPI count.
+- `src/main.jsx` — `DataProvider` added wrapping the whole app
+- **Hooks** (all in `src/shared/hooks/`):
+  - `useAuth.js` — re-export from AuthContext
+  - `useCurrentUser.js` — returns `useAuth().user`
+  - `useKPIs.js` — filters by program/assigneeId/archived, injects `status` via `calcKpiStatus`, `getKpiById` searches full list
+  - `useTodos.js` — filters by type ('personal'/'team'/'all') and optional userId
+  - `useTeam.js` — all users + `getMemberById`
+  - `useDatabase.js` — companies + articles with search filter, `getLogsForEntity`
+- **Utils** (all in `src/shared/utils/`):
+  - `formatters.js` — `getLabel` (bilingual obj resolver), `formatDate`, `formatRelativeDate`, `formatProgress`, `formatCount`, `formatActivityType`, `truncateUrl`, `getProgramColor`
+  - `statusCalculators.js` — `calcKpiStatus`, `calcPct`, `calcTodoStatus`, `isOverdue`
+
+**Verified:** No console errors. App still loads correctly.
 
 ---
 
