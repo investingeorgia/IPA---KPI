@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { useAuth } from '@shared/contexts/AuthContext';
 import { useLanguage } from '@shared/contexts/LanguageContext';
 import { useKPIs } from '@shared/hooks/useKPIs';
+import { useTeam } from '@shared/hooks/useTeam';
 import Button from '@shared/components/ui/Button';
+import Modal from '@shared/components/ui/Modal';
 import SearchInput from '@shared/components/ui/SearchInput';
 import { getLabel } from '@shared/utils/formatters';
 import KpiCard from './components/KpiCard';
@@ -18,12 +20,22 @@ const STATUS_OPTIONS = [
 export function KpiListPage() {
   const { user } = useAuth();
   const { lang, t } = useLanguage();
+  const { members } = useTeam();
 
   const [programFilter, setProgramFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
+  const [createOpen, setCreateOpen] = useState(false);
 
-  const { kpis: allKpis } = useKPIs();
+  // Create form state
+  const [newTitle, setNewTitle] = useState('');
+  const [newProgram, setNewProgram] = useState('invest');
+  const [newTarget, setNewTarget] = useState('');
+  const [newUnit, setNewUnit] = useState('#');
+  const [newDeadline, setNewDeadline] = useState('');
+  const [newAssignees, setNewAssignees] = useState([]);
+
+  const { kpis: allKpis, createKpi } = useKPIs();
   const { kpis: myKpis } = useKPIs({ assigneeId: user?.id });
 
   const baseKpis = user?.role === 'admin' ? allKpis : myKpis;
@@ -39,45 +51,45 @@ export function KpiListPage() {
     return true;
   });
 
+  function handleCreate() {
+    if (!newTitle.trim() || !newTarget) return;
+    createKpi({
+      title: { en: newTitle, ge: newTitle },
+      program: newProgram,
+      target: Number(newTarget),
+      unit: newUnit || '#',
+      deadline: newDeadline || null,
+      assignees: newAssignees,
+    });
+    setNewTitle('');
+    setNewProgram('invest');
+    setNewTarget('');
+    setNewUnit('#');
+    setNewDeadline('');
+    setNewAssignees([]);
+    setCreateOpen(false);
+  }
+
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
         <h1 style={{ margin: 0 }}>{t('kpis')}</h1>
         {user?.role === 'admin' && (
-          <Button variant="primary" onClick={() => alert('Create KPI — Chunk 5')}>
+          <Button variant="primary" onClick={() => setCreateOpen(true)}>
             {t('createKpi')}
           </Button>
         )}
       </div>
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder={t('search')}
-          style={{ width: 200 }}
-        />
-        <select
-          className="input"
-          value={programFilter}
-          onChange={(e) => setProgramFilter(e.target.value)}
-          style={{ width: 160 }}
-        >
+        <SearchInput value={search} onChange={setSearch} placeholder={t('search')} style={{ width: 200 }} />
+        <select className="input" value={programFilter} onChange={(e) => setProgramFilter(e.target.value)} style={{ width: 160 }}>
           <option value="">{t('all')} — {t('program')}</option>
-          {KPI_PROGRAMS.map((p) => (
-            <option key={p} value={p}>{t(p)}</option>
-          ))}
+          {KPI_PROGRAMS.map((p) => <option key={p} value={p}>{t(p)}</option>)}
         </select>
-        <select
-          className="input"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          style={{ width: 160 }}
-        >
+        <select className="input" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ width: 160 }}>
           <option value="">{t('all')} — {t('status')}</option>
-          {STATUS_OPTIONS.map(({ value, tKey }) => (
-            <option key={value} value={value}>{t(tKey)}</option>
-          ))}
+          {STATUS_OPTIONS.map(({ value, tKey }) => <option key={value} value={value}>{t(tKey)}</option>)}
         </select>
       </div>
 
@@ -85,11 +97,56 @@ export function KpiListPage() {
         <div className="empty">No KPIs match these filters.</div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-          {filteredKpis.map((kpi) => (
-            <KpiCard key={kpi.id} kpi={kpi} />
-          ))}
+          {filteredKpis.map((kpi) => <KpiCard key={kpi.id} kpi={kpi} />)}
         </div>
       )}
+
+      <Modal
+        isOpen={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title={t('createKpi')}
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setCreateOpen(false)}>{t('cancel')}</Button>
+            <Button variant="primary" onClick={handleCreate} disabled={!newTitle.trim() || !newTarget}>{t('save')}</Button>
+          </>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <div style={{ fontWeight: 500, marginBottom: 6, fontSize: 13 }}>{t('title')}</div>
+            <input className="input" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="KPI title..." autoFocus />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <div style={{ fontWeight: 500, marginBottom: 6, fontSize: 13 }}>{t('program')}</div>
+              <select className="input" value={newProgram} onChange={e => setNewProgram(e.target.value)}>
+                {KPI_PROGRAMS.map(p => <option key={p} value={p}>{t(p)}</option>)}
+              </select>
+            </div>
+            <div>
+              <div style={{ fontWeight: 500, marginBottom: 6, fontSize: 13 }}>Unit</div>
+              <input className="input" value={newUnit} onChange={e => setNewUnit(e.target.value)} placeholder="#" />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <div style={{ fontWeight: 500, marginBottom: 6, fontSize: 13 }}>{t('target')}</div>
+              <input className="input" type="number" min="1" value={newTarget} onChange={e => setNewTarget(e.target.value)} placeholder="100" />
+            </div>
+            <div>
+              <div style={{ fontWeight: 500, marginBottom: 6, fontSize: 13 }}>{t('deadline')}</div>
+              <input className="input" type="date" value={newDeadline} onChange={e => setNewDeadline(e.target.value)} />
+            </div>
+          </div>
+          <div>
+            <div style={{ fontWeight: 500, marginBottom: 6, fontSize: 13 }}>{t('assignees')}</div>
+            <select multiple className="input" value={newAssignees} onChange={e => setNewAssignees(Array.from(e.target.selectedOptions, o => o.value))} style={{ height: 90 }}>
+              {(members || []).map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

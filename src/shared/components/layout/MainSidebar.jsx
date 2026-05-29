@@ -15,7 +15,7 @@ const navItems = [
 
 export default function MainSidebar({ onQuickLog }) {
   const { user }         = useAuth();
-  const { lang, setLang, t } = useLanguage();
+  const { t } = useLanguage();
   const navigate         = useNavigate();
   const location         = useLocation();
 
@@ -111,22 +111,6 @@ export default function MainSidebar({ onQuickLog }) {
 
       {/* Spacer */}
       <div style={{ marginTop: 'auto' }} />
-
-      {/* Language toggle */}
-      <div className="seg" style={{ alignSelf: 'flex-start' }}>
-        <button
-          className={lang === 'en' ? 'active' : ''}
-          onClick={() => setLang('en')}
-        >
-          EN
-        </button>
-        <button
-          className={lang === 'ge' ? 'active' : ''}
-          onClick={() => setLang('ge')}
-        >
-          GE
-        </button>
-      </div>
 
       {/* User card */}
       {user && (
