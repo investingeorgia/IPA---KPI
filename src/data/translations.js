@@ -7,7 +7,7 @@
 export const translations = {
   // app
   appName:       { en: 'IPA KPI Hub',                   ge: 'IPA KPI ჰაბი' },
-  org:           { en: 'Enterprise Georgia',             ge: 'აწარმოე საქართველოში' },
+  org:           { en: 'Georgian Investment Agency',      ge: 'საქართველოს საინვესტიციო სააგენტო' },
   // nav
   dashboard:     { en: 'Dashboard',                     ge: 'მთავარი' },
   kpis:          { en: 'KPIs',                          ge: 'KPI-ები' },
