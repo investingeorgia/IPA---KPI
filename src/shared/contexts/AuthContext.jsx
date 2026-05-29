@@ -1,36 +1,63 @@
-// ============================================================
-// AuthContext.jsx — authentication state
-// CHUNK 1: hardcoded mock admin user
-// CHUNK 9: replace with Firebase Auth + Firestore user doc
-// ============================================================
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { loginWithEmail, logout as firebaseLogout, onAuthChanged } from '../../firebase/authService';
 
-// Mock user — stays as admin throughout development until Chunk 9
-const MOCK_USER = {
-  id:       'u0',
-  name:     'Nino Beridze',
-  email:    'nino.beridze@enterprise.gov.ge',
-  role:     'admin',   // 'admin' | 'user'
-  initials: 'NB',
-  color:    '#0B3D2E',
-  language: 'en',
+// Profile data keyed by Firebase UID (or email fallback).
+// In Chunk 10 this will come from a Firestore /users/{uid} doc.
+const PROFILES = {
+  'dtavlalashvili@enterprise.gov.ge': {
+    name:     'D. Tavlalashvili',
+    role:     'admin',
+    initials: 'DT',
+    color:    '#0B3D2E',
+    language: 'en',
+  },
 };
+
+function buildUser(firebaseUser) {
+  const profile = PROFILES[firebaseUser.email] ?? {
+    name:     firebaseUser.displayName || firebaseUser.email,
+    role:     'user',
+    initials: (firebaseUser.displayName || firebaseUser.email).slice(0, 2).toUpperCase(),
+    color:    '#555',
+    language: 'en',
+  };
+  return {
+    id:    firebaseUser.uid,
+    email: firebaseUser.email,
+    ...profile,
+  };
+}
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(MOCK_USER);
+  const [user, setUser]       = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // CHUNK 9: replace with signInWithEmailAndPassword
-  function login(email, _password) {
-    console.warn('[AuthContext] Mock login — replace in Chunk 9');
-    setUser(MOCK_USER);
+  useEffect(() => {
+    const unsubscribe = onAuthChanged((firebaseUser) => {
+      setUser(firebaseUser ? buildUser(firebaseUser) : null);
+      setLoading(false);
+    });
+    return unsubscribe;
+  }, []);
+
+  async function login(email, password) {
+    await loginWithEmail(email, password);
+    // onAuthChanged fires automatically and sets user
   }
 
-  // CHUNK 9: replace with Firebase signOut
-  function logout() {
-    console.warn('[AuthContext] Mock logout — replace in Chunk 9');
-    setUser(null);
+  async function logout() {
+    await firebaseLogout();
+    // onAuthChanged fires automatically and sets user to null
+  }
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        Loading…
+      </div>
+    );
   }
 
   return (
@@ -40,7 +67,6 @@ export function AuthProvider({ children }) {
   );
 }
 
-/** Hook — returns { user, login, logout } */
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');
