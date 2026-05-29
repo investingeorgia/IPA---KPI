@@ -6,8 +6,8 @@
 
 ## Current Status
 
-**Last completed:** Chunk 4 — Dashboard + KPI List pages  
-**Next up:** Chunk 5 — KPI Detail + Progress Logging  
+**Last completed:** Chunk 5 — KPI Detail + Progress Logging  
+**Next up:** Chunk 6 — Todos Module  
 **Dev server:** Running via `D:\Claude\start-dev.cmd` → `http://localhost:5173`  
 **Node.js:** Installed at `C:\nodejs` (portable zip, v20.18.1) — NOT on system PATH, use full path `C:\nodejs\node.exe` / `C:\nodejs\npm.cmd`
 
@@ -88,8 +88,8 @@ Start dev: D:\Claude\start-dev.cmd  → localhost:5173
 |---|---|---|
 | 3 | Mock Data & Hooks Layer | ✅ Done |
 | 4 | Dashboard + KPI List pages | ✅ Done |
-| 5 | KPI Detail + Progress Logging | ⏳ Next |
-| 6 | Todos (List / Board / Timeline) | ⬜ |
+| 5 | KPI Detail + Progress Logging | ✅ Done |
+| 6 | Todos (List / Board / Timeline) | ⏳ Next |
 | 7 | Team + Database modules | ⬜ |
 | 8 | Full detail pages + Profile + Reports | ⬜ |
 | 9 | Firebase Authentication | ⬜ |
@@ -124,7 +124,27 @@ Start dev: D:\Claude\start-dev.cmd  → localhost:5173
 1. Read this file
 2. Read `KPI Implementation Plan.md` for the next chunk's full spec
 3. Start the dev server: `cd D:\Claude\IPA-KPI-repo && /c/nodejs/node.exe node_modules/vite/bin/vite.js` → `http://localhost:5173`
-4. Pick up from **Chunk 5** (KPI Detail + Progress Logging)
+4. Pick up from **Chunk 6** (Todos Module)
+
+---
+
+### ✅ Chunk 5 — KPI Detail + Progress Logging
+
+**Files created:**
+- `src/modules/kpis/KpiDetailPage.jsx` — header with program badge + assignee avatars, KpiProgressBar, log history table (with admin delete), TaskList, LogProgressModal wired up
+- `src/modules/kpis/components/KpiProgressBar.jsx` — `current / target unit` display, percentage, ProgressBar, StatusBadge
+- `src/modules/kpis/components/LogProgressModal.jsx` — 2-step modal: step 1 picks activity type + count; step 2 shows company autocomplete (meeting/call), URL input (article), or free text (other); resets on open
+- `src/modules/kpis/components/TaskList.jsx` — expandable tasks with subtasks, status cycling (click badge), admin add/delete controls
+- `src/modules/kpis/components/SubtaskItem.jsx` — checkbox row, strikethrough when done
+
+**Verified:** `vite build` — 81 modules, zero errors.
+
+**Key decisions:**
+- Company autocomplete uses `useDatabase(companySearch)` at component top level — hook filters as user types
+- `onMouseDown` (not `onClick`) in autocomplete dropdown prevents input blur from firing before selection
+- `LogProgressModal` resets all state on `isOpen` via `useEffect`
+- `KpiDetailPage` calls `getLogsForKpi` then sorts client-side descending
+- Admin delete log button calls `deleteLog(id)` which reverses KPI current count in DataContext
 
 ---
 
