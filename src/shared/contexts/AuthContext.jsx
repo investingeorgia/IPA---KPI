@@ -5,6 +5,7 @@ import { loginWithEmail, logout as firebaseLogout, onAuthChanged } from '../../f
 // In Chunk 10 this will come from a Firestore /users/{uid} doc.
 const PROFILES = {
   'dtavlalashvili@enterprise.gov.ge': {
+    id:       'u0',
     name:     'D. Tavlalashvili',
     role:     'admin',
     initials: 'DT',
@@ -22,8 +23,9 @@ function buildUser(firebaseUser) {
     language: 'en',
   };
   return {
-    id:    firebaseUser.uid,
-    email: firebaseUser.email,
+    id:          profile.id || firebaseUser.uid,
+    firebaseUid: firebaseUser.uid,
+    email:       firebaseUser.email,
     ...profile,
   };
 }

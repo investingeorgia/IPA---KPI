@@ -1,244 +1,261 @@
-// ============================================================
-// DataContext.jsx — shared app data store (mock state)
-// Mirrors the prototype's StoreProvider (hub-data.jsx)
-// CHUNK 10: replace with Firestore onSnapshot subscriptions
-// ============================================================
-import { createContext, useContext, useState, useMemo } from 'react';
-import {
-  getMockUsers, getMockKPIs, getMockTodos,
-  getMockProgressLogs, getMockCompanies, getMockArticles,
-} from '@data/mockData';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, increment } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import { db } from '../../firebase/firebaseConfig';
+import { auth } from '../../firebase/firebaseConfig';
 
-export const DataContext = createContext(null);
+const DataContext = createContext(null);
 
 export function DataProvider({ children }) {
-  const [users]     = useState(() => getMockUsers());
-  const [kpis,      setKpis]      = useState(() => getMockKPIs());
-  const [todos,     setTodos]     = useState(() => getMockTodos());
-  const [logs,      setLogs]      = useState(() => getMockProgressLogs());
-  const [companies, setCompanies] = useState(() => getMockCompanies());
-  const [articles,  setArticles]  = useState(() => getMockArticles());
+  const [users, setUsers] = useState([]);
+  const [kpis, setKpis] = useState([]);
+  const [todos, setTodos] = useState([]);
+  const [logs, setLogs] = useState([]);
+  const [companies, setCompanies] = useState([]);
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // ── Database helpers ────────────────────────────────────────
+  // Refs to avoid stale closures in callbacks
+  const kpisRef = useRef([]);
+  const todosRef = useRef([]);
+  const logsRef = useRef([]);
+  const companiesRef = useRef([]);
+  const articlesRef = useRef([]);
 
-  const dbActions = useMemo(() => ({
-    updateCompany(id, patch) {
-      setCompanies(prev => prev.map(c => c.id === id ? { ...c, ...patch } : c));
-    },
+  useEffect(() => { kpisRef.current = kpis; }, [kpis]);
+  useEffect(() => { todosRef.current = todos; }, [todos]);
+  useEffect(() => { logsRef.current = logs; }, [logs]);
+  useEffect(() => { companiesRef.current = companies; }, [companies]);
+  useEffect(() => { articlesRef.current = articles; }, [articles]);
 
-    updateArticle(id, patch) {
-      setArticles(prev => prev.map(a => a.id === id ? { ...a, ...patch } : a));
-    },
-
-    findOrCreateCompany(name) {
-      const lower = name.toLowerCase();
-      let found;
-      setCompanies(prev => {
-        const existing = prev.find(c => c.name.toLowerCase() === lower);
-        if (existing) {
-          found = existing.id;
-          return prev;
-        }
-        const newId = 'c' + Date.now();
-        found = newId;
-        const today = new Date().toISOString().slice(0, 10);
-        return [...prev, { id: newId, name, website: '', description: '', createdAt: today }];
-      });
-      return found;
-    },
-
-    findOrCreateArticle(url) {
-      const lower = url.toLowerCase();
-      let found;
-      setArticles(prev => {
-        const existing = prev.find(a => a.url.toLowerCase() === lower);
-        if (existing) {
-          found = existing.id;
-          return prev;
-        }
-        const newId = 'a' + Date.now();
-        found = newId;
-        let hostname = url;
-        try { hostname = new URL(url).hostname.replace(/^www\./, ''); } catch {}
-        const today = new Date().toISOString().slice(0, 10);
-        return [...prev, { id: newId, url, title: hostname, description: '', createdAt: today }];
-      });
-      return found;
-    },
-  }), []);
-
-  // ── KPI actions ─────────────────────────────────────────────
-
-  const kpiActions = useMemo(() => ({
-    addProgressLog({ kpiId, userId, activityType, count, entityType, entityName, comment }) {
-      // Resolve entityId — create entity if entityName was provided
-      let entityId = null;
-      if (entityName) {
-        if (entityType === 'company') {
-          entityId = dbActions.findOrCreateCompany(entityName);
-        } else if (entityType === 'article') {
-          entityId = dbActions.findOrCreateArticle(entityName);
-        }
+  useEffect(() => {
+    let unsubFirestore = () => {};
+    const unsubAuth = onAuthStateChanged(auth, (firebaseUser) => {
+      unsubFirestore();
+      if (!firebaseUser) {
+        setUsers([]);
+        setKpis([]);
+        setTodos([]);
+        setLogs([]);
+        setCompanies([]);
+        setArticles([]);
+        setLoading(false);
+        return;
       }
+      let loaded = 0;
+      const mark = () => { if (++loaded >= 6) setLoading(false); };
+      const unsubs = [
+        onSnapshot(collection(db, 'users'),         s => { setUsers(s.docs.map(d => ({ id: d.id, ...d.data() }))); mark(); }),
+        onSnapshot(collection(db, 'kpis'),          s => { setKpis(s.docs.map(d => ({ id: d.id, ...d.data() }))); mark(); }),
+        onSnapshot(collection(db, 'todos'),         s => { setTodos(s.docs.map(d => ({ id: d.id, ...d.data() }))); mark(); }),
+        onSnapshot(collection(db, 'progress_logs'), s => { setLogs(s.docs.map(d => ({ id: d.id, ...d.data() }))); mark(); }),
+        onSnapshot(collection(db, 'companies'),     s => { setCompanies(s.docs.map(d => ({ id: d.id, ...d.data() }))); mark(); }),
+        onSnapshot(collection(db, 'articles'),      s => { setArticles(s.docs.map(d => ({ id: d.id, ...d.data() }))); mark(); }),
+      ];
+      unsubFirestore = () => unsubs.forEach(u => u());
+    });
+    return () => { unsubAuth(); unsubFirestore(); };
+  }, []);
 
-      const today = new Date().toISOString().slice(0, 10);
-      const newLog = {
-        id: 'p' + Date.now(),
-        kpiId,
-        userId,
-        activityType,
-        count,
-        entityType: entityType || null,
-        entityId,
-        date: today,
-        comment: comment || '',
-      };
+  // --- Company / Article helpers ---
 
-      setLogs(prev => [...prev, newLog]);
-      setKpis(prev => prev.map(k =>
-        k.id === kpiId ? { ...k, current: k.current + count } : k
-      ));
-    },
+  const findOrCreateCompany = useCallback(async (name) => {
+    if (!name) return null;
+    const existing = companiesRef.current.find(
+      c => c.name && c.name.toLowerCase() === name.toLowerCase()
+    );
+    if (existing) return existing.id;
+    const today = new Date().toISOString().split('T')[0];
+    const ref = await addDoc(collection(db, 'companies'), {
+      name,
+      website: '',
+      description: '',
+      createdAt: today,
+    });
+    return ref.id;
+  }, []);
 
-    deleteLog(logId) {
-      // Find the log first to reverse the count
-      setLogs(prev => {
-        const log = prev.find(l => l.id === logId);
-        if (log) {
-          setKpis(kpis => kpis.map(k =>
-            k.id === log.kpiId ? { ...k, current: Math.max(0, k.current - log.count) } : k
-          ));
-        }
-        return prev.filter(l => l.id !== logId);
-      });
-    },
+  const findOrCreateArticle = useCallback(async (url) => {
+    if (!url) return null;
+    const existing = articlesRef.current.find(a => a.url === url);
+    if (existing) return existing.id;
+    let title = url;
+    try {
+      title = new URL(url).hostname;
+    } catch {
+      // keep url as title if parsing fails
+    }
+    const today = new Date().toISOString().split('T')[0];
+    const ref = await addDoc(collection(db, 'articles'), {
+      url,
+      title,
+      description: '',
+      createdAt: today,
+    });
+    return ref.id;
+  }, []);
 
-    createKpi(data) {
-      const newKpi = {
-        ...data,
-        id: 'k' + Date.now(),
-        current: 0,
-        archived: false,
-        tasks: [],
-      };
-      setKpis(prev => [...prev, newKpi]);
-    },
+  // --- Progress Logs ---
 
-    updateKpi(id, patch) {
-      setKpis(prev => prev.map(k => k.id === id ? { ...k, ...patch } : k));
-    },
+  const addProgressLog = useCallback(async ({
+    kpiId, userId, activityType, count, entityType, entityName, comment
+  }) => {
+    let entityId = null;
+    if (entityName) {
+      if (entityType === 'company') {
+        entityId = await findOrCreateCompany(entityName);
+      } else if (entityType === 'article') {
+        entityId = await findOrCreateArticle(entityName);
+      }
+    }
+    await addDoc(collection(db, 'progress_logs'), {
+      kpiId,
+      userId,
+      activityType: activityType || null,
+      count: count || 1,
+      entityType: entityType || null,
+      entityName: entityName || null,
+      entityId: entityId || null,
+      comment: comment || '',
+      date: new Date().toISOString(),
+    });
+    await updateDoc(doc(db, 'kpis', kpiId), { current: increment(count || 1) });
+  }, [findOrCreateCompany, findOrCreateArticle]);
 
-    archiveKpi(id) {
-      setKpis(prev => prev.map(k => k.id === id ? { ...k, archived: true } : k));
-    },
+  const deleteLog = useCallback(async (logId) => {
+    const log = logsRef.current.find(l => l.id === logId);
+    if (!log) return;
+    await deleteDoc(doc(db, 'progress_logs', logId));
+    await updateDoc(doc(db, 'kpis', log.kpiId), { current: increment(-(log.count || 1)) });
+  }, []);
 
-    addTask(kpiId, task) {
-      const newTask = {
-        ...task,
-        id: 't' + Date.now(),
-        status: 'open',
-        subtasks: [],
-      };
-      setKpis(prev => prev.map(k =>
-        k.id === kpiId ? { ...k, tasks: [...k.tasks, newTask] } : k
-      ));
-    },
+  // --- KPIs ---
 
-    updateTask(kpiId, taskId, patch) {
-      setKpis(prev => prev.map(k =>
-        k.id === kpiId
-          ? { ...k, tasks: k.tasks.map(t => t.id === taskId ? { ...t, ...patch } : t) }
-          : k
-      ));
-    },
+  const createKpi = useCallback(async (data) => {
+    await addDoc(collection(db, 'kpis'), data);
+  }, []);
 
-    deleteTask(kpiId, taskId) {
-      setKpis(prev => prev.map(k =>
-        k.id === kpiId
-          ? { ...k, tasks: k.tasks.filter(t => t.id !== taskId) }
-          : k
-      ));
-    },
+  const updateKpi = useCallback(async (id, patch) => {
+    await updateDoc(doc(db, 'kpis', id), patch);
+  }, []);
 
-    toggleSubtask(kpiId, taskId, subtaskId) {
-      setKpis(prev => prev.map(k => {
-        if (k.id !== kpiId) return k;
-        return {
-          ...k,
-          tasks: k.tasks.map(t => {
-            if (t.id !== taskId) return t;
-            return {
-              ...t,
-              subtasks: t.subtasks.map(s =>
-                s.id === subtaskId ? { ...s, done: !s.done } : s
-              ),
-            };
-          }),
-        };
-      }));
-    },
-  }), [dbActions]);
+  const archiveKpi = useCallback(async (id) => {
+    await updateDoc(doc(db, 'kpis', id), { archived: true });
+  }, []);
 
-  // ── Todo actions ────────────────────────────────────────────
+  // --- Tasks (nested in KPI documents) ---
 
-  const todoActions = useMemo(() => ({
-    createTodo(data) {
-      const newTodo = {
-        ...data,
-        id: 'td' + Date.now(),
-        status: 'open',
-        subtasks: [],
-      };
-      setTodos(prev => [...prev, newTodo]);
-    },
+  const addTask = useCallback(async (kpiId, task) => {
+    const kpi = kpisRef.current.find(k => k.id === kpiId);
+    if (!kpi) return;
+    const tasks = Array.isArray(kpi.tasks) ? kpi.tasks : [];
+    const newTask = {
+      ...task,
+      id: 't' + Date.now(),
+      status: 'open',
+      subtasks: [],
+    };
+    await updateDoc(doc(db, 'kpis', kpiId), { tasks: [...tasks, newTask] });
+  }, []);
 
-    updateTodo(id, patch) {
-      setTodos(prev => prev.map(td => td.id === id ? { ...td, ...patch } : td));
-    },
+  const updateTask = useCallback(async (kpiId, taskId, patch) => {
+    const kpi = kpisRef.current.find(k => k.id === kpiId);
+    if (!kpi) return;
+    const tasks = (Array.isArray(kpi.tasks) ? kpi.tasks : []).map(t =>
+      t.id === taskId ? { ...t, ...patch } : t
+    );
+    await updateDoc(doc(db, 'kpis', kpiId), { tasks });
+  }, []);
 
-    deleteTodo(id) {
-      setTodos(prev => prev.filter(td => td.id !== id));
-    },
+  const deleteTask = useCallback(async (kpiId, taskId) => {
+    const kpi = kpisRef.current.find(k => k.id === kpiId);
+    if (!kpi) return;
+    const tasks = (Array.isArray(kpi.tasks) ? kpi.tasks : []).filter(t => t.id !== taskId);
+    await updateDoc(doc(db, 'kpis', kpiId), { tasks });
+  }, []);
 
-    toggleTodoSubtask(todoId, subtaskId) {
-      setTodos(prev => prev.map(td => {
-        if (td.id !== todoId) return td;
-        return {
-          ...td,
-          subtasks: td.subtasks.map(s =>
-            s.id === subtaskId ? { ...s, done: !s.done } : s
-          ),
-        };
-      }));
-    },
-  }), []);
+  const toggleSubtask = useCallback(async (kpiId, taskId, subtaskId) => {
+    const kpi = kpisRef.current.find(k => k.id === kpiId);
+    if (!kpi) return;
+    const tasks = (Array.isArray(kpi.tasks) ? kpi.tasks : []).map(t => {
+      if (t.id !== taskId) return t;
+      const subtasks = (Array.isArray(t.subtasks) ? t.subtasks : []).map(s =>
+        s.id === subtaskId ? { ...s, completed: !s.completed } : s
+      );
+      return { ...t, subtasks };
+    });
+    await updateDoc(doc(db, 'kpis', kpiId), { tasks });
+  }, []);
 
-  // ── Context value ───────────────────────────────────────────
+  // --- Todos ---
+
+  const createTodo = useCallback(async (data) => {
+    await addDoc(collection(db, 'todos'), data);
+  }, []);
+
+  const updateTodo = useCallback(async (id, patch) => {
+    await updateDoc(doc(db, 'todos', id), patch);
+  }, []);
+
+  const deleteTodo = useCallback(async (id) => {
+    await deleteDoc(doc(db, 'todos', id));
+  }, []);
+
+  const toggleTodoSubtask = useCallback(async (todoId, subtaskId) => {
+    const todo = todosRef.current.find(t => t.id === todoId);
+    if (!todo) return;
+    const subtasks = (Array.isArray(todo.subtasks) ? todo.subtasks : []).map(s =>
+      s.id === subtaskId ? { ...s, completed: !s.completed } : s
+    );
+    await updateDoc(doc(db, 'todos', todoId), { subtasks });
+  }, []);
+
+  // --- Companies / Articles direct updates ---
+
+  const updateCompany = useCallback(async (id, patch) => {
+    await updateDoc(doc(db, 'companies', id), patch);
+  }, []);
+
+  const updateArticle = useCallback(async (id, patch) => {
+    await updateDoc(doc(db, 'articles', id), patch);
+  }, []);
 
   const value = useMemo(() => ({
-    // Raw state
     users,
     kpis,
     todos,
     logs,
     companies,
     articles,
-    // KPI actions
-    ...kpiActions,
-    // Todo actions
-    ...todoActions,
-    // Database actions
-    updateCompany:       dbActions.updateCompany,
-    updateArticle:       dbActions.updateArticle,
-    findOrCreateCompany: dbActions.findOrCreateCompany,
-    findOrCreateArticle: dbActions.findOrCreateArticle,
-  }), [users, kpis, todos, logs, companies, articles, kpiActions, todoActions, dbActions]);
+    loading,
+    addProgressLog,
+    deleteLog,
+    createKpi,
+    updateKpi,
+    archiveKpi,
+    addTask,
+    updateTask,
+    deleteTask,
+    toggleSubtask,
+    createTodo,
+    updateTodo,
+    deleteTodo,
+    toggleTodoSubtask,
+    updateCompany,
+    updateArticle,
+    findOrCreateCompany,
+    findOrCreateArticle,
+  }), [
+    users, kpis, todos, logs, companies, articles, loading,
+    addProgressLog, deleteLog,
+    createKpi, updateKpi, archiveKpi,
+    addTask, updateTask, deleteTask, toggleSubtask,
+    createTodo, updateTodo, deleteTodo, toggleTodoSubtask,
+    updateCompany, updateArticle,
+    findOrCreateCompany, findOrCreateArticle,
+  ]);
 
-  return (
-    <DataContext.Provider value={value}>
-      {children}
-    </DataContext.Provider>
-  );
+  return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 }
 
 export function useData() {
@@ -246,3 +263,5 @@ export function useData() {
   if (!ctx) throw new Error('useData must be used within a DataProvider');
   return ctx;
 }
+
+export default DataContext;
