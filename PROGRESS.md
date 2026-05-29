@@ -6,8 +6,8 @@
 
 ## Current Status
 
-**Last completed:** Chunk 5 — KPI Detail + Progress Logging  
-**Next up:** Chunk 6 — Todos Module  
+**Last completed:** Chunk 6 — Todos Module  
+**Next up:** Chunk 7 — Team + Database modules  
 **Dev server:** Running via `D:\Claude\start-dev.cmd` → `http://localhost:5173`  
 **Node.js:** Installed at `C:\nodejs` (portable zip, v20.18.1) — NOT on system PATH, use full path `C:\nodejs\node.exe` / `C:\nodejs\npm.cmd`
 
@@ -89,8 +89,8 @@ Start dev: D:\Claude\start-dev.cmd  → localhost:5173
 | 3 | Mock Data & Hooks Layer | ✅ Done |
 | 4 | Dashboard + KPI List pages | ✅ Done |
 | 5 | KPI Detail + Progress Logging | ✅ Done |
-| 6 | Todos (List / Board / Timeline) | ⏳ Next |
-| 7 | Team + Database modules | ⬜ |
+| 6 | Todos (List / Board / Timeline) | ✅ Done |
+| 7 | Team + Database modules | ⏳ Next |
 | 8 | Full detail pages + Profile + Reports | ⬜ |
 | 9 | Firebase Authentication | ⬜ |
 | 10 | Firestore Data Layer | ⬜ |
@@ -124,7 +124,28 @@ Start dev: D:\Claude\start-dev.cmd  → localhost:5173
 1. Read this file
 2. Read `KPI Implementation Plan.md` for the next chunk's full spec
 3. Start the dev server: `cd D:\Claude\IPA-KPI-repo && /c/nodejs/node.exe node_modules/vite/bin/vite.js` → `http://localhost:5173`
-4. Pick up from **Chunk 6** (Todos Module)
+4. Pick up from **Chunk 7** (Team + Database modules)
+
+---
+
+### ✅ Chunk 6 — Todos Module
+
+**Files created:**
+- `src/modules/todos/TodosPage.jsx` — My/Team tabs, List/Board/Timeline view switcher, status filter, "New Todo" modal (title, due date, assignees for team), role-gated create button
+- `src/modules/todos/components/ViewSwitcher.jsx` — 3-button pill toggle (List/Board/Timeline), persists to localStorage
+- `src/modules/todos/components/TodoItem.jsx` — checkbox row, strikethrough when done, due date chip (red/amber/gray), subtask count, team assignee avatars, expandable subtask checkboxes
+- `src/modules/todos/components/TodoListView.jsx` — 5 sections (Overdue/Today/This Week/Later/Done), collapsible, Done closed by default
+- `src/modules/todos/components/TodoBoardView.jsx` — 3-column kanban (To Do/In Progress/Done), "→ next status" button per card
+- `src/modules/todos/components/TodoTimelineView.jsx` — horizontal Gantt, 75-day window, colored dot at due date, today line, month header labels
+
+**Verified:** `vite build` — 87 modules, zero errors.
+
+**Key decisions:**
+- `useTodos('personal', user.id)` + `useTodos('team')` called unconditionally, selected by tab
+- View preference persisted to `localStorage` key `'todo-view'`
+- `handleToggle` toggles between `'open'` and `'done'` (not through inProgress)
+- Board view uses `onStatusChange` to advance: `open → inProgress → done`
+- Timeline uses a 75-day window (today −14 to +60) with absolute-positioned dot markers
 
 ---
 
