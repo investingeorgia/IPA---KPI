@@ -1,13 +1,12 @@
 // ============================================================
 // App.jsx — root router
-// All routes defined here. Pages are placeholder <h1> until
-// their chunk is built. Layout shell added in Chunk 2.
 // ============================================================
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider }     from '@shared/contexts/AuthContext';
 import { LanguageProvider } from '@shared/contexts/LanguageContext';
 import ProtectedRoute from '@shared/components/guards/ProtectedRoute';
 import AdminRoute     from '@shared/components/guards/AdminRoute';
+import AppLayout      from '@shared/components/layout/AppLayout';
 
 // ── Pages ────────────────────────────────────────────────────
 import LoginPage          from '@modules/auth/LoginPage';
@@ -25,6 +24,40 @@ import ArticlesPage       from '@modules/database/articles/ArticlesPage';
 import ArticleDetailPage  from '@modules/database/articles/ArticleDetailPage';
 import ReportsPage        from '@modules/reports/ReportsPage';
 
+// ── Layout wrappers ──────────────────────────────────────────
+
+function ProtectedLayout() {
+  return (
+    <ProtectedRoute>
+      <AppLayout>
+        <Outlet />
+      </AppLayout>
+    </ProtectedRoute>
+  );
+}
+
+function AdminLayout() {
+  return (
+    <AdminRoute>
+      <AppLayout>
+        <Outlet />
+      </AppLayout>
+    </AdminRoute>
+  );
+}
+
+function DatabaseWrapper() {
+  return (
+    <ProtectedRoute>
+      <AppLayout fullBleed>
+        <DatabaseLayout />
+      </AppLayout>
+    </ProtectedRoute>
+  );
+}
+
+// ── App ─────────────────────────────────────────────────────
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -34,26 +67,30 @@ export default function App() {
             {/* Public */}
             <Route path="/login" element={<LoginPage />} />
 
-            {/* Protected — all authenticated users */}
-            <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-            <Route path="/kpis"      element={<ProtectedRoute><KpiListPage /></ProtectedRoute>} />
-            <Route path="/kpis/:id"  element={<ProtectedRoute><KpiDetailPage /></ProtectedRoute>} />
-            <Route path="/todos"     element={<ProtectedRoute><TodosPage /></ProtectedRoute>} />
-            <Route path="/profile"   element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+            {/* Protected pages */}
+            <Route element={<ProtectedLayout />}>
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/kpis"      element={<KpiListPage />} />
+              <Route path="/kpis/:id"  element={<KpiDetailPage />} />
+              <Route path="/todos"     element={<TodosPage />} />
+              <Route path="/profile"   element={<ProfilePage />} />
+            </Route>
 
-            {/* Database — nested layout with right sidebar */}
-            <Route path="/database" element={<ProtectedRoute><DatabaseLayout /></ProtectedRoute>}>
+            {/* Admin only pages */}
+            <Route element={<AdminLayout />}>
+              <Route path="/team"         element={<TeamPage />} />
+              <Route path="/team/:userId" element={<MemberDetailPage />} />
+              <Route path="/reports"      element={<ReportsPage />} />
+            </Route>
+
+            {/* Database — fullBleed layout with nested routes */}
+            <Route path="/database" element={<DatabaseWrapper />}>
               <Route index element={<Navigate to="companies" replace />} />
               <Route path="companies"     element={<CompaniesPage />} />
               <Route path="companies/:id" element={<CompanyDetailPage />} />
               <Route path="articles"      element={<ArticlesPage />} />
               <Route path="articles/:id"  element={<ArticleDetailPage />} />
             </Route>
-
-            {/* Admin only */}
-            <Route path="/team"           element={<AdminRoute><TeamPage /></AdminRoute>} />
-            <Route path="/team/:userId"   element={<AdminRoute><MemberDetailPage /></AdminRoute>} />
-            <Route path="/reports"        element={<AdminRoute><ReportsPage /></AdminRoute>} />
 
             {/* Fallback */}
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
