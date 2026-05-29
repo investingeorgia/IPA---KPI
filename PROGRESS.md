@@ -6,8 +6,8 @@
 
 ## Current Status
 
-**Last completed:** Chunk 6 — Todos Module  
-**Next up:** Chunk 7 — Team + Database modules  
+**Last completed:** Chunk 7 — Team + Database modules  
+**Next up:** Chunk 8 — Full detail pages, Profile & Reports  
 **Dev server:** Running via `D:\Claude\start-dev.cmd` → `http://localhost:5173`  
 **Node.js:** Installed at `C:\nodejs` (portable zip, v20.18.1) — NOT on system PATH, use full path `C:\nodejs\node.exe` / `C:\nodejs\npm.cmd`
 
@@ -90,8 +90,8 @@ Start dev: D:\Claude\start-dev.cmd  → localhost:5173
 | 4 | Dashboard + KPI List pages | ✅ Done |
 | 5 | KPI Detail + Progress Logging | ✅ Done |
 | 6 | Todos (List / Board / Timeline) | ✅ Done |
-| 7 | Team + Database modules | ⏳ Next |
-| 8 | Full detail pages + Profile + Reports | ⬜ |
+| 7 | Team + Database modules | ✅ Done |
+| 8 | Full detail pages + Profile + Reports | ⏳ Next |
 | 9 | Firebase Authentication | ⬜ |
 | 10 | Firestore Data Layer | ⬜ |
 | 11 | Deploy to Vercel | ⬜ |
@@ -124,7 +124,34 @@ Start dev: D:\Claude\start-dev.cmd  → localhost:5173
 1. Read this file
 2. Read `KPI Implementation Plan.md` for the next chunk's full spec
 3. Start the dev server: `cd D:\Claude\IPA-KPI-repo && /c/nodejs/node.exe node_modules/vite/bin/vite.js` → `http://localhost:5173`
-4. Pick up from **Chunk 7** (Team + Database modules)
+4. Pick up from **Chunk 8** (Full detail pages, Profile & Reports)
+
+---
+
+### ✅ Chunk 7 — Team + Database modules
+
+**Files created:**
+
+*Team module:*
+- `src/modules/team/TeamPage.jsx` — admin-gated, search filter, MemberTable, "+ Add user" placeholder
+- `src/modules/team/MemberDetailPage.jsx` — avatar header, KPI progress summary, last 10 logs, open todos with due-date chips, admin "Reassign KPIs" placeholder
+- `src/modules/team/components/MemberTable.jsx` — shared Table with avatar+name, email, role badge columns
+- `src/modules/team/components/MemberProgressSummary.jsx` — auto-fill grid of soft cards per KPI (progress bar, current/target, last activity date)
+
+*Database module:*
+- `src/modules/database/DatabaseLayout.jsx` — exports DatabaseContext + useDatabaseContext hook; flex row layout (central Outlet + optional RightSidebar); sub-nav (Companies / Articles) with NavLink active styling; closes sidebar on route change
+- `src/modules/database/companies/CompaniesPage.jsx` — search, Table with name/website/activity count, row click opens right sidebar
+- `src/modules/database/companies/CompanyDetailSidebar.jsx` — inline-editable name/website/notes (auto-save on blur), last 10 activity logs, "Open full page →" link
+- `src/modules/database/articles/ArticlesPage.jsx` — same pattern, title/URL/mentions columns
+- `src/modules/database/articles/ArticleDetailSidebar.jsx` — same structure as company sidebar
+
+**Verified:** `vite build` — 91 modules, zero errors.
+
+**Key decisions:**
+- DatabaseLayout owns sidebar state; child pages call `useDatabaseContext().setSelectedRecord()`
+- `useEffect` on `location.pathname` closes sidebar when switching Companies ↔ Articles
+- Sidebar detail components pull live data via `getCompanyById`/`getArticleById` (not stale prop) — stays in sync after edits
+- `defaultValue` (not `value`) on editable inputs so they're uncontrolled; `onBlur` saves the patch
 
 ---
 
