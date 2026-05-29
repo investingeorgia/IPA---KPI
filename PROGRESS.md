@@ -128,6 +128,14 @@ Start dev: D:\Claude\start-dev.cmd  → localhost:5173
 
 ---
 
+### ✅ LoginPage (pre-built, no chunk number)
+
+**File:** `src/modules/auth/LoginPage.jsx`
+
+Built the login form UI ahead of Chunk 9 so that chunk only needs to swap AuthContext (not the page). Form: email + password inputs, error display (maps Firebase error codes to human-readable messages), loading state on submit button, calls `useAuth().login()` → redirects to `/dashboard`. Currently works with the mock login (always succeeds).
+
+---
+
 ### ✅ Chunk 8 — Full detail pages, Profile & Reports
 
 **Files created:**
