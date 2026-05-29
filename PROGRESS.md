@@ -6,8 +6,8 @@
 
 ## Current Status
 
-**Last completed:** Chunk 7 — Team + Database modules  
-**Next up:** Chunk 8 — Full detail pages, Profile & Reports  
+**Last completed:** Chunk 8 — Full detail pages, Profile & Reports  
+**Next up:** Chunk 9 — Firebase Authentication  
 **Dev server:** Running via `D:\Claude\start-dev.cmd` → `http://localhost:5173`  
 **Node.js:** Installed at `C:\nodejs` (portable zip, v20.18.1) — NOT on system PATH, use full path `C:\nodejs\node.exe` / `C:\nodejs\npm.cmd`
 
@@ -91,8 +91,8 @@ Start dev: D:\Claude\start-dev.cmd  → localhost:5173
 | 5 | KPI Detail + Progress Logging | ✅ Done |
 | 6 | Todos (List / Board / Timeline) | ✅ Done |
 | 7 | Team + Database modules | ✅ Done |
-| 8 | Full detail pages + Profile + Reports | ⏳ Next |
-| 9 | Firebase Authentication | ⬜ |
+| 8 | Full detail pages + Profile + Reports | ✅ Done |
+| 9 | Firebase Authentication | ⏳ Next |
 | 10 | Firestore Data Layer | ⬜ |
 | 11 | Deploy to Vercel | ⬜ |
 
@@ -124,7 +124,34 @@ Start dev: D:\Claude\start-dev.cmd  → localhost:5173
 1. Read this file
 2. Read `KPI Implementation Plan.md` for the next chunk's full spec
 3. Start the dev server: `cd D:\Claude\IPA-KPI-repo && /c/nodejs/node.exe node_modules/vite/bin/vite.js` → `http://localhost:5173`
-4. Pick up from **Chunk 8** (Full detail pages, Profile & Reports)
+4. Pick up from **Chunk 9** (Firebase Authentication)
+
+---
+
+### ✅ Chunk 8 — Full detail pages, Profile & Reports
+
+**Files created:**
+
+*Database detail pages:*
+- `src/modules/database/companies/CompanyDetailPage.jsx` — breadcrumb, h1, two-column layout: left Card (controlled name/website/notes with Save + "✓ Saved" flash), right Card (activity history with user/KPI/date-range filters)
+- `src/modules/database/articles/ArticleDetailPage.jsx` — same structure for articles (title/URL/notes)
+
+*Profile:*
+- `src/modules/profile/ProfilePage.jsx` — avatar header, display name input, language toggle (wired to setLang), "✓ Saved" feedback, disabled password fields (placeholder until Chunk 9)
+
+*Reports:*
+- `src/shared/utils/exportPDF.js` — stub: `export function exportToPDF() { window.print() }`
+- `src/modules/reports/components/ReportFilters.jsx` — language toggle, scope selector (All/Program/Member) with conditional sub-selectors, date range inputs, Generate button
+- `src/modules/reports/components/ReportPreview.jsx` — printable report with `useEffect`-injected `@media print` CSS isolating `#report-preview-root`; agency header, per-KPI sections (progress bar, activity breakdown by type, task completion ratio); fully bilingual via `reportLang` prop
+- `src/modules/reports/ReportsPage.jsx` — assembles filters + preview + "Export PDF" button; `handleGenerate` applies scope/date filters then sets `reportData` state
+
+**Verified:** `vite build` — 94 modules, zero errors.
+
+**Key decisions:**
+- CompanyDetailPage uses controlled state (not uncontrolled `defaultValue`) so Save is explicit, not on-blur
+- Print CSS uses `body > * { display: none }` + `#report-preview-root { display: block }` pattern — no class knowledge of outer layout needed
+- ReportPreview renders plain HTML `<div>` progress bars (not the shared ProgressBar component) for print compatibility
+- Language in ReportFilters is independent of the app's UI language — report can be generated in GE while the UI is in EN
 
 ---
 
